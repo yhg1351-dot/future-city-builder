@@ -40,6 +40,9 @@ h2{font-size:22px} h3{font-size:17px}
 .steps{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 .steps button{min-height:34px;padding:4px 10px;border-radius:99px;font-size:13px}
 .steps button.done{color:var(--good);border-color:var(--good)}
+.steps button.lock{opacity:.45}
+.otable{width:100%;border-collapse:collapse;font-size:14px}.otable th,.otable td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}.otable th{color:var(--muted);font-weight:500;font-size:13px}
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:13px;text-align:center}.flow div{background:var(--soft);border-radius:10px;padding:8px 6px}.flow b{display:block;font-size:18px}
 .who{font-size:13px;color:var(--muted)}
 main{flex:1;min-height:0;position:relative}
 .screen{position:absolute;inset:0;overflow:auto;padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -126,13 +129,14 @@ main{flex:1;min-height:0;position:relative}
 
 <div class="app">
   <div class="top">
-    <div class="brand">내일의 도시 설계실 <small>시안 v0.2.1</small></div>
+    <div class="brand">내일의 도시 설계실 <small>시안 v0.3</small></div>
     <div class="who" id="who"></div>
     <div class="steps" id="steps">
       <button data-go="enter">입장</button>
-      <button data-go="board">컨셉보드</button>
-      <button data-go="build">도시 만들기</button>
-      <button data-go="submit">제출</button>
+      <button data-go="think">① 생각 열기</button>
+      <button data-go="board">② 컨셉보드</button>
+      <button data-go="build">③ 도시 만들기</button>
+      <button data-go="submit">④ 점검·제출</button>
       <button data-go="teacher" class="ghost">교사 화면</button>
     </div>
   </div>
@@ -155,10 +159,44 @@ main{flex:1;min-height:0;position:relative}
       </div>
     </section>
 
+    <!-- 1.5 생각 열기 (활동지 ①) -->
+    <section class="screen" id="s-think" hidden>
+      <div class="wrap">
+        <div class="row" style="justify-content:space-between"><h2>① 생각 열기</h2><span class="muted">활동지 ① 1~4번을 화면으로 옮긴 양식이에요</span></div>
+        <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+          <div class="card" style="display:grid;gap:10px">
+            <h3>1. 디지털트윈 한눈에 보기</h3>
+            <div class="flow"><div><b>🏙️→🖥️</b>현실을 가상공간에 만들기</div><div><b>🔍</b>미리 시험해 보기</div><div><b>✅</b>더 나은 도시 설계</div></div>
+            <div class="field"><label for="t-dt">디지털트윈은 ( 빈칸 )을/를 가상공간에 비슷하게 구현하는 기술이다.</label><input id="t-dt" placeholder="빈칸에 들어갈 말" maxlength="20"></div>
+            <div class="field"><label for="t-dtgood">디지털트윈을 우리 도시에 활용하면 좋은 점 1가지는?</label><input id="t-dtgood" maxlength="80"></div>
+          </div>
+          <div class="card" style="display:grid;gap:10px">
+            <h3>2. 해결하고 싶은 미래도시 문제</h3>
+            <div class="chips" id="t-prob"></div>
+            <div class="field"><label for="t-probwhy">그 이유 한 줄</label><input id="t-probwhy" maxlength="80"></div>
+          </div>
+          <div class="card" style="display:grid;gap:10px">
+            <h3>3. 도시 배경 고르기</h3>
+            <div class="chips" id="t-bg"></div>
+            <div class="hint" id="t-bghint"></div>
+            <div class="field"><label for="t-bgissue">이 배경에서 생길 수 있는 문제 1가지</label><input id="t-bgissue" maxlength="80"></div>
+          </div>
+          <div class="card" style="display:grid;gap:10px">
+            <h3>4. 빠른 아이디어 메모</h3>
+            <div class="field"><label for="t-name">도시 이름</label><input id="t-name" placeholder="예: 아쿠아 노바" maxlength="14"></div>
+            <div class="field"><label for="t-aiq">AI에게 물어볼 질문</label><input id="t-aiq" placeholder="예: 사막 미래도시에 꼭 필요한 친환경 에너지와 생활 시설을 추천해 줘" maxlength="100"></div>
+            <div class="field"><label for="t-idea1">내가 선택한 아이디어 2가지</label><input id="t-idea1" placeholder="1." maxlength="60"><input id="t-idea2" placeholder="2." maxlength="60"></div>
+            <div class="field"><label>우리 도시의 핵심 시설 3가지</label><div class="chips" id="t-fac"></div></div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:14px"><button class="primary" id="btn-think" style="min-height:48px;font-size:16px;padding:0 24px">② 컨셉보드로 →</button><span class="muted">적은 내용은 자동으로 저장되고, 다음 단계에 미리 채워져요.</span></div>
+      </div>
+    </section>
+
     <!-- 2 컨셉보드 -->
     <section class="screen" id="s-board" hidden>
       <div class="wrap">
-        <div class="row" style="justify-content:space-between"><h2>② 미래도시 컨셉보드</h2><span class="muted">활동지 ② 5번을 화면으로 옮긴 양식이에요</span></div>
+        <div class="row" style="justify-content:space-between"><h2>② 미래도시 컨셉보드</h2><span class="muted">활동지 ② 5번 양식 · ①에서 고른 문제·배경·시설이 미리 들어와 있어요</span></div>
         <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
           <div class="card" style="display:grid;gap:12px">
             <div class="grid2">
@@ -250,19 +288,25 @@ main{flex:1;min-height:0;position:relative}
     <!-- 4 제출 -->
     <section class="screen" id="s-submit" hidden>
       <div class="wrap">
-        <h2>④ 제출하고 발표 준비하기</h2>
+        <h2>④ 점검하고 발표 준비하기</h2>
         <div class="grid2">
           <div class="card" style="display:grid;gap:10px">
-            <h3>제출 전 점검</h3>
+            <h3>6. 제작 체크리스트</h3>
             <div class="check" id="checklist2"></div>
             <div class="muted" id="submitnote"></div>
+            <h3 style="margin-top:6px">넣은 오브젝트와 이유</h3>
+            <div class="muted">도시에 놓은 시설과 💬 설명 글이 자동으로 들어와요.</div>
+            <table class="otable" id="objtable"></table>
           </div>
           <div class="card" style="display:grid;gap:10px">
-            <h3>발표 한 줄 준비</h3>
+            <h3>7. 발표 한 줄 준비</h3>
             <div class="field"><label for="p1">우리 도시는 어디에 만들었나요?</label><input id="p1"></div>
             <div class="field"><label for="p2">어떤 문제를 해결하나요?</label><input id="p2"></div>
             <div class="field"><label for="p3">가장 중요한 시설은 무엇인가요?</label><input id="p3"></div>
             <div class="field"><label for="p4">이 도시에서 삶이 어떻게 좋아지나요?</label><input id="p4"></div>
+            <h3 style="margin-top:6px">8. 활동 마무리</h3>
+            <div class="field"><label for="w1">⭐ 오늘 가장 잘한 점</label><input id="w1" maxlength="80"></div>
+            <div class="field"><label for="w2">🎯 다음에 보완하고 싶은 점</label><input id="w2" maxlength="80"></div>
           </div>
         </div>
         <div class="row">
@@ -289,6 +333,7 @@ main{flex:1;min-height:0;position:relative}
           </div>
           <div class="card">
             <div class="row" style="justify-content:space-between"><h3>진행 현황</h3><span class="muted">1분마다 자동 저장된 상태</span></div>
+            <div class="row" style="margin-top:8px;gap:8px"><span class="muted">학생에게 열린 단계:</span><div class="chips" id="openchips"></div></div>
             <div class="status" id="status" style="margin-top:10px"></div>
           </div>
         </div>
@@ -355,19 +400,38 @@ const SAMPLES=[
 ];
 
 /* ---------- state ---------- */
-let S={code:'SKY24',num:7,nick:'바다설계자',name:'',slogan:'',bg:'수중',prob:'기후위기',vals:[],facs:[],solve:{e:'',m:'',l:''},photo:null,stickers:[],theme:'바다',objs:[],roads:[],notes:0,boardPlaced:false,submitted:false,pres:['','','','']};
+let S={code:'SKY24',num:7,nick:'바다설계자',name:'',slogan:'',bg:'수중',prob:'기후위기',vals:[],facs:[],solve:{e:'',m:'',l:''},photo:null,stickers:[],theme:'바다',objs:[],roads:[],notes:0,boardPlaced:false,submitted:false,pres:['','','',''],dt:'',dtGood:'',probWhy:'',bgIssue:'',aiQ:'',ideas:['',''],wrap:['','']};
+let T={open:4};const TKEY='future-city-teacher';try{T=Object.assign(T,JSON.parse(localStorage.getItem(TKEY)||'{}'))}catch(e){}function saveT(){try{localStorage.setItem(TKEY,JSON.stringify(T))}catch(e){}}
+const BGHINT={'수중':'산소 공급, 수압, 해양 생태','우주':'식량 생산, 에너지, 중력 문제','사막':'물 부족, 냉방, 태양광','초원':'생태 보전, 저층 건축, 자연친화 이동','하늘':'공중 이동, 구조 안정성, 에너지 공급'};
 const KEY='future-city-draft';
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.objs)S=Object.assign(S,d)}catch(e){}}
 load();
 
 /* ---------- navigation ---------- */
-const screens=['enter','board','build','submit','teacher'];
-function go(n){screens.forEach(s=>$('#s-'+s).hidden=(s!==n));$$('#steps button').forEach(b=>b.classList.toggle('on',b.dataset.go===n));
+const screens=['enter','think','board','build','submit','teacher'];const STEPNAME={enter:'입장',think:'생각 열기',board:'컨셉보드',build:'도시 만들기',submit:'점검·제출'};
+function stepIdx(n){return ['enter','think','board','build','submit'].indexOf(n)}
+function furthest(){return S.submitted?'submit':S.objs.length?'build':(S.name||S.slogan||S.vals.length)?'board':(S.dt||S.probWhy||S.bgIssue)?'think':'enter'}
+function renderSteps(){$$('#steps button').forEach(b=>{const i=stepIdx(b.dataset.go);b.classList.toggle('lock',i>T.open);b.classList.toggle('done',i>=0&&i<stepIdx(furthest()))})}
+function go(n){if(stepIdx(n)>T.open){toast(`${STEPNAME[n]} 단계는 선생님이 아직 열지 않았어요`);return}screens.forEach(s=>$('#s-'+s).hidden=(s!==n));$$('#steps button').forEach(b=>b.classList.toggle('on',b.dataset.go===n));renderSteps();if(n==='think')renderThink();if(n==='board')syncBoardChips();
   if(n==='build'){try{initThree();onResize();applyBg();rebuildScene()}catch(err){console.error(err);toast('3D 화면을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.')}} if(n==='board')renderBoard(); if(n==='submit')renderSubmit(); if(n==='teacher')renderTeacher(); save()}
 $$('#steps button').forEach(b=>b.onclick=()=>go(b.dataset.go));
-$('#btn-enter').onclick=()=>{S.code=$('#code').value.trim().toUpperCase()||'SKY24';S.num=+$('#num').value||1;S.nick=$('#nick').value.trim()||'설계자';$('#who').textContent=`${S.code} · ${S.num}번 ${S.nick}`;go('board')};
+$('#btn-enter').onclick=()=>{S.code=$('#code').value.trim().toUpperCase()||'SKY24';S.num=+$('#num').value||1;S.nick=$('#nick').value.trim()||'설계자';$('#who').textContent=`${S.code} · ${S.num}번 ${S.nick}`;go('think')};
 if(S.nick)$('#who').textContent=`${S.code} · ${S.num}번 ${S.nick}`;
+
+/* ---------- 생각 열기 (활동지 ①) ---------- */
+function renderThink(){
+ chips($('#t-prob'),PROBS,()=>S.prob,v=>{S.prob=v});
+ chips($('#t-bg'),Object.keys(BGS),()=>S.bg,v=>{S.bg=v;renderThink()});
+ $$('#t-bg button').forEach(b=>{const k=b.textContent;b.textContent=BGS[k].emoji+' '+k+' 도시'});
+ $('#t-bghint').textContent=`${S.bg} 도시에서 생각할 것: ${BGHINT[S.bg]}`;
+ chips($('#t-fac'),LIB.filter(l=>!l.hidden).map(l=>l.n),()=>S.facs,v=>{S.facs=v},true,3);
+ const bind=(id,get,set)=>{const el=$('#'+id);el.value=get()||'';el.oninput=()=>{set(el.value);save()}};
+ bind('t-dt',()=>S.dt,v=>S.dt=v);bind('t-dtgood',()=>S.dtGood,v=>S.dtGood=v);bind('t-probwhy',()=>S.probWhy,v=>S.probWhy=v);bind('t-bgissue',()=>S.bgIssue,v=>S.bgIssue=v);
+ bind('t-name',()=>S.name,v=>{S.name=v;$('#cname').value=v});bind('t-aiq',()=>S.aiQ,v=>S.aiQ=v);bind('t-idea1',()=>S.ideas[0],v=>S.ideas[0]=v);bind('t-idea2',()=>S.ideas[1],v=>S.ideas[1]=v);
+}
+function syncBoardChips(){$$('#bgchips button').forEach(b=>b.classList.toggle('on',b.textContent.includes(S.bg)));$$('#probchips button').forEach(b=>b.classList.toggle('on',b.textContent===S.prob));$$('#facchips button').forEach(b=>b.classList.toggle('on',S.facs.includes(b.textContent)));$('#cname').value=S.name;renderBoard()}
+$('#btn-think').onclick=()=>{if(!S.probWhy&&!S.dt)return toast('1번이나 2번을 먼저 적어 볼까요?');go('board');toast('①에서 고른 내용이 컨셉보드에 들어왔어요')};
 
 /* ---------- concept board form ---------- */
 function chips(el,list,get,set,multi,max){el.innerHTML='';list.forEach(v=>{const b=document.createElement('button');b.className='chip';b.textContent=v;b.classList.toggle('on',multi?get().includes(v):get()===v);
@@ -546,6 +610,8 @@ $('#btn-tosubmit').onclick=()=>go('submit');
 /* submit */
 function renderSubmit(){sim();renderCheck();const c=checks(),miss=c.filter(x=>!x.ok).length;$('#submitnote').textContent=miss?`${miss}개가 아직 비어 있어요. 그래도 제출할 수 있지만 돌아가서 채우면 더 좋아요.`:'모든 항목이 준비됐어요!';
  ['p1','p2','p3','p4'].forEach((k,i)=>{const el=$('#'+k);el.value=S.pres[i]||(i===0?`${S.bg}에 만든 ${S.name||''}`:i===1?S.prob:i===2?(S.facs[0]||''):'');el.oninput=()=>{S.pres[i]=el.value;save()}});
+ ['w1','w2'].forEach((k,i)=>{const el=$('#'+k);el.value=S.wrap[i]||'';el.oninput=()=>{S.wrap[i]=el.value;save()}});
+ const objs=S.objs.filter(o=>o.t!=='board');$('#objtable').innerHTML=`<tr><th>#</th><th>넣은 오브젝트</th><th>왜 필요한가?</th></tr>`+(objs.length?objs.map((o,i)=>`<tr><td>${i+1}</td><td>${esc(LIB.find(l=>l.id===o.t).n)}</td><td>${o.note?esc(o.note):'<span class="muted">💬 설명 글이 아직 없어요</span>'}</td></tr>`).join(''):`<tr><td colspan="3" class="muted">아직 놓은 시설이 없어요</td></tr>`);
  $('#submitted').textContent=S.submitted?'제출 완료 · 다시 제출하면 최신본으로 바뀌어요':'';$('#classgal').hidden=!S.submitted;if(S.submitted)renderGal($('#gal'))}
 $('#btn-submit').onclick=()=>{S.submitted=true;save();toast('제출했어요! 선생님 화면에 올라갔어요');renderSubmit()};
 $('#btn-back').onclick=()=>go('build');
@@ -555,15 +621,16 @@ function renderGal(el){const mine={nick:S.nick,bg:S.bg,name:S.name,prob:S.prob};
 /* teacher */
 function renderTeacher(){const q=$('#qr'),x=q.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,21,21);x.fillStyle='#000';let seed=7;for(let i=0;i<21;i++)for(let j=0;j<21;j++){seed=(seed*9301+49297)%233280;if((seed/233280)<.45)x.fillRect(i,j,1,1)}
  [[0,0],[14,0],[0,14]].forEach(([a,b])=>{x.fillStyle='#000';x.fillRect(a,b,7,7);x.fillStyle='#fff';x.fillRect(a+1,b+1,5,5);x.fillStyle='#000';x.fillRect(a+2,b+2,3,3)});
- const me={nick:S.nick||'(나)',bg:S.bg,name:S.name,prob:S.prob,step:S.submitted?'제출':S.objs.length?'도시':'컨셉보드',n:checks().filter(c=>c.ok).length,when:'방금'};
- const rows=[me,...SAMPLES.map((s,i)=>({...s,step:s.done?'제출':i%2?'도시':'컨셉보드',n:s.done?4:1+i%3,when:(1+i)+'분 전'}))];
+ const me={nick:S.nick||'(나)',bg:S.bg,name:S.name,prob:S.prob,step:S.submitted?'제출':STEPNAME[furthest()],n:checks().filter(c=>c.ok).length,when:'방금'};
+ const rows=[me,...SAMPLES.map((s,i)=>({...s,step:s.done?'제출':['생각 열기','컨셉보드','도시 만들기'][i%3],n:s.done?4:1+i%3,when:(1+i)+'분 전'}))];
+ const oc=$('#openchips');oc.innerHTML='';[['1','think'],['2','board'],['3','build'],['4','submit']].forEach(([k,n],i)=>{const b=document.createElement('button');b.className='chip'+(T.open===i+1?' on':'');b.textContent=`${k}단계 ${STEPNAME[n]}까지`;b.onclick=()=>{T.open=i+1;saveT();renderTeacher();renderSteps();toast(`학생은 ${k}단계까지 들어갈 수 있어요`)};oc.appendChild(b)});
  $('#status').innerHTML=rows.map(r=>`<div class="scard"><b>${esc(r.nick)}</b><span class="pill">${r.step}</span> <span class="muted">${BGS[r.bg].emoji} ${esc(r.name)||'—'}</span><div class="bar"><span style="width:${r.n/4*100}%"></span></div><div class="muted">체크 ${r.n}/4 · 저장 ${r.when}</div></div>`).join('');
  renderGal($('#tgal'))}
 $('#btn-pub').onclick=()=>toast('학생 화면에 갤러리가 열렸어요 (시안)');
 
 /* boot */
 formInit();renderBoard();
-if(S.nick&&(S.name||S.objs.length)){go(S.objs.length?'build':'board')}else go('enter');
+if(S.nick&&furthest()!=='enter'){go(furthest())}else go('enter');renderSteps();
 })();
 </script>
 
