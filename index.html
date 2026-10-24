@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내일의 도시 설계실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen app. Left: scene or form. Right (or bottom on phone): panel. Top: step bar. */
+:root{
+  --bg:#f3f6f9; --panel:#ffffff; --fg:#17222e; --muted:#5d6b7a; --line:#d8e0e8;
+  --accent:#1f7a8c; --accent-ink:#ffffff; --soft:#e3f1f4;
+  --good:#2f9e5f; --warn:#d9962b; --bad:#d9534f;
+  --display:'Jua','Noto Sans KR',sans-serif; --body:'Noto Sans KR',system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f161d; --panel:#172129; --fg:#e8eef3; --muted:#9fb0bf; --line:#2b3a47;
+  --accent:#4fb3c6; --accent-ink:#06202a; --soft:#1b3038; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f161d; --panel:#172129; --fg:#e8eef3; --muted:#9fb0bf; --line:#2b3a47;
+  --accent:#4fb3c6; --accent-ink:#06202a; --soft:#1b3038; color-scheme:dark }
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 12px;min-height:40px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button.ghost{background:transparent}
+button.on{background:var(--soft);border-color:var(--accent);color:var(--fg)}
+input,select,textarea{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 11px;width:100%;box-sizing:border-box;min-height:42px}
+textarea{min-height:60px;resize:vertical}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:22px} h3{font-size:17px}
+.app{height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-family:var(--display);font-size:20px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.brand small{font-family:var(--body);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 8px;letter-spacing:.04em}
+.steps{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.steps button{min-height:34px;padding:4px 10px;border-radius:99px;font-size:13px}
+.steps button.done{color:var(--good);border-color:var(--good)}
+.who{font-size:13px;color:var(--muted)}
+main{flex:1;min-height:0;position:relative}
+.screen{position:absolute;inset:0;overflow:auto;padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.field{display:grid;gap:6px;min-width:0}
+.field label{font-size:13px;color:var(--muted);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:99px;min-height:34px;padding:4px 12px;font-size:14px}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted);font-size:13px}
+.hint{font-size:13px;color:var(--muted);background:var(--soft);border-radius:10px;padding:8px 12px}
+/* concept board preview */
+.board{aspect-ratio:4/3;max-width:100%;border-radius:12px;padding:14px;position:relative;overflow:hidden;color:#132;display:grid;grid-template-rows:auto auto 1fr auto;gap:6px;border:1px solid rgba(0,0,0,.08)}
+.board .bname{font-family:var(--display);font-size:clamp(20px,4vw,30px);line-height:1.1}
+.board .bslogan{font-size:14px;opacity:.85}
+.board .bvals{display:flex;gap:6px;flex-wrap:wrap}
+.board .bvals span{background:rgba(255,255,255,.7);border-radius:99px;padding:2px 10px;font-size:12px}
+.board .bfac{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:end}
+.board .bfac div{background:rgba(255,255,255,.75);border-radius:8px;padding:6px;font-size:12px;min-width:0}
+.board .bfac b{display:block;font-size:13px}
+.board .bphoto{position:absolute;right:12px;top:12px;width:34%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.board .sticker{position:absolute;font-size:28px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));cursor:grab;touch-action:none;user-select:none}
+.board .bsolve{display:flex;gap:6px;font-size:11px}
+.board .bsolve span{background:rgba(0,0,0,.08);border-radius:6px;padding:2px 6px}
+/* builder */
+.builder{position:absolute;inset:0;display:grid;grid-template-columns:1fr 320px;grid-template-rows:1fr}
+.stage{position:relative;min-width:0;min-height:0;background:#000}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;left:12px;top:12px;display:grid;gap:6px;pointer-events:none}
+.gauges{display:flex;gap:6px;pointer-events:auto}
+.g{background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:72px;font-size:12px}
+.g b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+.g i{display:block;height:4px;border-radius:2px;background:var(--line);margin-top:4px;overflow:hidden}
+.g i span{display:block;height:100%;background:var(--good)}
+.say{background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;max-width:320px;pointer-events:auto}
+.modebar{position:absolute;left:12px;bottom:12px;right:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+.modebar button{min-height:38px;font-size:13px;background:color-mix(in srgb,var(--panel) 92%,transparent)}
+.modebar .spacer{flex:1}
+.toolbar{position:absolute;left:50%;transform:translateX(-50%);top:12px;display:flex;gap:6px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:12px;padding:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 24px)}
+.toolbar button{min-height:36px;font-size:13px;padding:4px 10px}
+.walkpad{position:absolute;right:12px;bottom:12px;display:grid;grid-template-columns:repeat(3,48px);gap:4px}
+.walkpad button{min-height:48px;font-size:18px;background:color-mix(in srgb,var(--panel) 92%,transparent)}
+.panel{background:var(--panel);border-left:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:0;border-radius:0;background:transparent;min-height:44px;border-bottom:2px solid transparent;font-size:14px}
+.tabs button.on{border-bottom-color:var(--accent);color:var(--accent);font-weight:700}
+.pbody{padding:12px;display:grid;gap:10px;align-content:start}
+.cat{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.lib button{display:grid;gap:4px;justify-items:center;padding:8px 4px;min-height:74px;font-size:12px;line-height:1.2}
+.lib button .sw{width:34px;height:26px;border-radius:6px}
+.lib button.on{border-color:var(--accent);background:var(--soft)}
+.check{display:grid;gap:6px}
+.check div{display:flex;gap:8px;align-items:center;font-size:14px}
+.check .dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none}
+.check .ok .dot{background:var(--good);border-color:var(--good);color:#fff}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.gcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.gcard .thumb{aspect-ratio:16/10;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.gcard .meta{padding:10px;font-size:13px}
+.gcard .meta b{display:block;font-size:15px}
+.pill{display:inline-block;border-radius:99px;padding:1px 8px;font-size:12px;background:var(--soft);color:var(--accent)}
+.status{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.scard{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px}
+.scard b{display:block}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar span{display:block;height:100%;background:var(--accent)}
+.qr{width:140px;height:140px;image-rendering:pixelated;border:6px solid #fff;border-radius:6px;background:#fff}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+@media (max-width:760px){
+  .builder{grid-template-columns:1fr;grid-template-rows:1fr 42%}
+  .panel{border-left:0;border-top:1px solid var(--line)}
+  .toolbar{top:auto;bottom:58px}
+  .modebar{bottom:8px}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <div class="brand">내일의 도시 설계실 <small>시안 v0.2.1</small></div>
+    <div class="who" id="who"></div>
+    <div class="steps" id="steps">
+      <button data-go="enter">입장</button>
+      <button data-go="board">컨셉보드</button>
+      <button data-go="build">도시 만들기</button>
+      <button data-go="submit">제출</button>
+      <button data-go="teacher" class="ghost">교사 화면</button>
+    </div>
+  </div>
+  <main>
+
+    <!-- 1 입장 -->
+    <section class="screen" id="s-enter">
+      <div class="wrap" style="max-width:560px">
+        <div class="card" style="display:grid;gap:14px">
+          <h2>2050 라이프 디자이너, 환영합니다</h2>
+          <p class="muted" style="margin:0">선생님이 보여주는 학급 코드와 내 번호, 수업에서 쓸 별칭을 넣으면 바로 시작해요. 회원가입은 없어요.</p>
+          <div class="grid2">
+            <div class="field"><label for="code">학급 코드</label><input id="code" value="SKY24" maxlength="6" style="font-family:var(--display);font-size:22px;letter-spacing:.2em;text-transform:uppercase"></div>
+            <div class="field"><label for="num">번호</label><input id="num" type="number" min="1" max="40" value="7"></div>
+          </div>
+          <div class="field"><label for="nick">별칭 (실명 대신)</label><input id="nick" value="바다설계자" maxlength="10"></div>
+          <button class="primary" id="btn-enter" style="min-height:48px;font-size:16px">시작하기</button>
+          <div class="hint">같은 코드와 번호로 다시 들어오면 하던 작품이 그대로 열려요. (시안에서는 이 기기 안에만 저장돼요.)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 컨셉보드 -->
+    <section class="screen" id="s-board" hidden>
+      <div class="wrap">
+        <div class="row" style="justify-content:space-between"><h2>② 미래도시 컨셉보드</h2><span class="muted">활동지 ② 5번을 화면으로 옮긴 양식이에요</span></div>
+        <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+          <div class="card" style="display:grid;gap:12px">
+            <div class="grid2">
+              <div class="field"><label for="cname">도시 이름</label><input id="cname" placeholder="예: 아쿠아 노바" maxlength="14"></div>
+              <div class="field"><label for="cslogan">한 줄 슬로건</label><input id="cslogan" placeholder="예: 바다와 함께 숨 쉬는 도시" maxlength="30"></div>
+            </div>
+            <div class="field"><label>도시 배경</label><div class="chips" id="bgchips"></div></div>
+            <div class="field"><label>해결하고 싶은 문제</label><div class="chips" id="probchips"></div></div>
+            <div class="field"><label>핵심 가치 2가지</label><div class="chips" id="valchips"></div></div>
+            <div class="field"><label>주요 시설 3가지 (도시 만들기에서 쓸 시설을 미리 골라요)</label><div class="chips" id="facchips"></div></div>
+            <div class="field"><label>문제 해결 방법</label>
+              <div class="grid2" style="grid-template-columns:repeat(3,1fr);gap:6px">
+                <input id="sv-e" placeholder="⚡ 에너지" maxlength="18"><input id="sv-m" placeholder="🚌 이동" maxlength="18"><input id="sv-l" placeholder="🏠 생활" maxlength="18">
+              </div></div>
+            <div class="grid2">
+              <div class="field"><label for="photo">사진 넣기 (카메라·갤러리)</label><input id="photo" type="file" accept="image/*" style="padding:7px"></div>
+              <div class="field"><label>스티커 (눌러서 붙이고 끌어서 옮겨요)</label><div class="chips" id="stickers"></div></div>
+            </div>
+            <div class="field"><label>색 테마</label><div class="chips" id="themechips"></div></div>
+          </div>
+          <div style="display:grid;gap:10px;align-content:start">
+            <div class="board" id="board"></div>
+            <button class="primary" id="btn-raise" style="min-height:48px;font-size:16px">도시에 세우기 →</button>
+            <div class="hint">버튼을 누르면 이 보드가 3D 도시 입구에 안내판으로 자동으로 서요. 이미지 저장이나 업로드가 필요 없어요.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 도시 만들기 -->
+    <section class="screen" id="s-build" hidden style="padding:0;overflow:hidden">
+      <div class="builder">
+        <div class="stage" id="stage">
+          <div class="hud">
+            <div class="gauges">
+              <div class="g">⚡ 에너지<b id="g-e">0</b><i><span id="gb-e"></span></i></div>
+              <div class="g">💧 물<b id="g-w">0</b><i><span id="gb-w"></span></i></div>
+              <div class="g">🫧 산소<b id="g-o">0</b><i><span id="gb-o"></span></i></div>
+            </div>
+            <div class="say" id="say">주민: 아직 아무도 살지 않아요. 집부터 지어 볼까요?</div>
+          </div>
+          <div class="toolbar" id="seltools" hidden>
+            <span class="muted" id="selname" style="align-self:center;padding:0 6px"></span>
+            <button data-t="move" class="on">↔ 이동</button>
+            <button data-t="rot">⟳ 회전</button>
+            <button data-t="up">▲ 크게</button>
+            <button data-t="down">▼ 작게</button>
+            <button data-t="note">💬 설명</button>
+            <button data-t="copy">⧉ 복사</button>
+            <button data-t="del">🗑 삭제</button>
+          </div>
+          <div class="modebar">
+            <button id="m-place" class="on">👆 배치</button>
+            <button id="m-road">🛣 길 그리기</button>
+            <button id="m-walk">🚶 둘러보기</button>
+            <button id="m-home">⌂ 처음 위치</button>
+            <button id="m-undo">↶ 되돌리기</button>
+            <span class="spacer"></span>
+            <button id="m-adv">🧪 심화 실험</button>
+          </div>
+          <div class="walkpad" id="walkpad" hidden>
+            <span></span><button data-w="f">▲</button><span></span>
+            <button data-w="l">◀</button><button data-w="b">▼</button><button data-w="r">▶</button>
+          </div>
+        </div>
+        <aside class="panel">
+          <div class="tabs"><button class="on" data-tab="lib">시설</button><button data-tab="check">점검</button><button data-tab="guide">안내</button></div>
+          <div class="pbody" id="tab-lib"></div>
+          <div class="pbody" id="tab-check" hidden>
+            <h3>제작 체크리스트</h3>
+            <div class="check" id="checklist"></div>
+            <div class="hint" id="probhint"></div>
+            <h3 style="margin-top:6px">도시 상태</h3>
+            <div class="muted" id="stats"></div>
+            <button class="primary" id="btn-tosubmit">제출 화면으로 →</button>
+          </div>
+          <div class="pbody" id="tab-guide" hidden>
+            <h3>조작 방법</h3>
+            <div class="muted">· 한 손가락으로 끌면 화면이 돌아가요.<br>· 두 손가락으로 벌리면 확대, 함께 끌면 이동이에요.<br>· 시설을 누르면 위쪽에 도구가 나와요. 이동 도구를 켜고 시설을 끌어 옮겨요.<br>· 길 그리기에서 바닥을 누르면 길이 생기고 다시 누르면 지워져요.<br>· 💬 설명을 눌러 “이 시설은 어떤 문제를 해결하나요?”를 적어요.</div>
+            <h3>오늘의 미션</h3>
+            <div class="muted">배경이 드러나게 · 주요 시설 3개 이상 · 문제 해결 요소 포함 · 컨셉보드 배치. 다 되면 점검 탭에서 확인하고 제출해요.</div>
+            <h3>심화 실험</h3>
+            <div class="muted">시간 흐르기, 낮과 밤, 모래바람, 비축량은 선생님이 열어 주는 심화 실험이에요. 시안에서는 버튼만 있어요.</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 4 제출 -->
+    <section class="screen" id="s-submit" hidden>
+      <div class="wrap">
+        <h2>④ 제출하고 발표 준비하기</h2>
+        <div class="grid2">
+          <div class="card" style="display:grid;gap:10px">
+            <h3>제출 전 점검</h3>
+            <div class="check" id="checklist2"></div>
+            <div class="muted" id="submitnote"></div>
+          </div>
+          <div class="card" style="display:grid;gap:10px">
+            <h3>발표 한 줄 준비</h3>
+            <div class="field"><label for="p1">우리 도시는 어디에 만들었나요?</label><input id="p1"></div>
+            <div class="field"><label for="p2">어떤 문제를 해결하나요?</label><input id="p2"></div>
+            <div class="field"><label for="p3">가장 중요한 시설은 무엇인가요?</label><input id="p3"></div>
+            <div class="field"><label for="p4">이 도시에서 삶이 어떻게 좋아지나요?</label><input id="p4"></div>
+          </div>
+        </div>
+        <div class="row">
+          <button class="primary" id="btn-submit" style="min-height:48px;font-size:16px;padding:0 24px">제출하기</button>
+          <button id="btn-back" class="ghost">← 도시로 돌아가기</button>
+          <span class="muted" id="submitted"></span>
+        </div>
+        <div class="card" id="classgal" hidden>
+          <div class="row" style="justify-content:space-between"><h3>우리 반 갤러리</h3><span class="muted">선생님이 공개를 켜면 친구 작품을 둘러볼 수 있어요 (예시 작품)</span></div>
+          <div class="gallery" id="gal" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 교사 -->
+    <section class="screen" id="s-teacher" hidden>
+      <div class="wrap">
+        <div class="row" style="justify-content:space-between"><h2>교사 화면 · 6학년 2반</h2><span class="pill">예시 데이터</span></div>
+        <div class="grid2" style="grid-template-columns:200px 1fr">
+          <div class="card" style="display:grid;gap:8px;justify-items:center">
+            <canvas class="qr" id="qr" width="21" height="21"></canvas>
+            <div style="font-family:var(--display);font-size:30px;letter-spacing:.2em;color:var(--accent)">SKY24</div>
+            <div class="muted" style="text-align:center">학급 코드 · 화면에 크게 띄우기<br>(QR 모양은 예시)</div>
+          </div>
+          <div class="card">
+            <div class="row" style="justify-content:space-between"><h3>진행 현황</h3><span class="muted">1분마다 자동 저장된 상태</span></div>
+            <div class="status" id="status" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between"><h3>제출 갤러리</h3><div class="row"><button id="btn-pub">학생에게 갤러리 공개</button><button>발표 모드 ▶</button><button>작품 내려받기</button></div></div>
+          <div class="gallery" id="tgal" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<input id="notebox" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800)};
+
+/* ---------- data ---------- */
+const BGS={
+  수중:{sky:0x0b3d5c,ground:0x1f6f8b,fog:0.045,light:0xbfe6ff,emoji:'🌊',board:'#bfe6ef'},
+  우주:{sky:0x05060f,ground:0x5a5661,fog:0.0,light:0xffffff,emoji:'🪐',board:'#d9d6e8'},
+  사막:{sky:0xf2d6a0,ground:0xd6b066,fog:0.012,light:0xfff1d6,emoji:'🏜',board:'#f6e3b4'},
+  초원:{sky:0xbfe3ff,ground:0x6aa84f,fog:0.008,light:0xffffff,emoji:'🌿',board:'#d8f0c2'},
+  하늘:{sky:0x9fd1ff,ground:0xe9f1f8,fog:0.02,light:0xffffff,emoji:'☁️',board:'#dcefff'}
+};
+const PROBS=['기후위기','에너지 부족','교통 혼잡','인구 변화','재난과 안전'];
+const VALS=['지속가능성','안전','공존','편리함','회복력','포용','아름다움','건강'];
+const THEMES={바다:'#bfe6ef',모래:'#f6e3b4',숲:'#d8f0c2',노을:'#fbd3c4',보라:'#e3d9f5'};
+const STICK=['☀️','🌱','🚁','🐬','🏙️','🔋','💧','🛰️','🌈','🤖'];
+/* facility library: cat, color, size, primitive kind, resource per unit (e,w,o), people */
+const LIB=[
+ {id:'house',m:[{f:'building-type-a',t:1.7}],n:'스마트 주택',cat:'생활',c:0xf0b27a,k:'house',e:-4,w:-6,o:-2,p:4},
+ {id:'apt',m:[{f:'building-skyscraper-a',t:1.7}],n:'친환경 아파트',cat:'생활',c:0xe59866,k:'tower',e:-10,w:-14,o:-5,p:12},
+ {id:'school',m:[{f:'building-c',t:1.8}],n:'학교',cat:'생활',c:0xf7dc6f,k:'wide',e:-4,w:-2,o:0},
+ {id:'hosp',m:[{f:'building-h',t:1.8}],n:'AI 병원',cat:'생활',c:0xffffff,k:'wide',e:-5,w:-3,o:0},
+ {id:'farm',m:[{f:'hangar_roundGlass',t:1.8}],n:'스마트팜',cat:'생활',c:0x82e0aa,k:'dome',e:-2,w:-4,o:4},
+ {id:'solar',n:'태양광 발전소',cat:'에너지',c:0x2e86c1,k:'flat',e:12,w:0,o:0},
+ {id:'wind',n:'풍력 발전기',cat:'에너지',c:0xecf0f1,k:'wind',e:8,w:0,o:0},
+ {id:'batt',m:[{f:'machine_barrelLarge',t:1.3},{f:'machine_barrel',t:.7,x:.75,z:.6}],n:'배터리 저장소',cat:'에너지',c:0x5dade2,k:'box',e:3,w:0,o:0},
+ {id:'bus',m:[{f:'platform_small',t:1.8},{f:'craft_speederA',t:1.3,y:.3}],n:'자율주행 버스 정류장',cat:'이동',c:0xaf7ac5,k:'stop',e:-1,w:0,o:0},
+ {id:'drone',m:[{f:'platform_high',t:1.5},{f:'craft_speederC',t:1.2,y:1.6}],n:'드론 택시 승강장',cat:'이동',c:0xbb8fce,k:'pad',e:-2,w:0,o:0},
+ {id:'tube',m:[{f:'monorail_trackStraight',t:1.9},{f:'monorail_trainPassenger',t:1.5,y:.22}],n:'해저·튜브 열차역',cat:'이동',c:0x7fb3d5,k:'tube',e:-3,w:0,o:0},
+ {id:'recycle',m:[{f:'pipe_ring',t:1.5},{f:'machine_barrel',t:.6,x:.7,z:-.6}],n:'물 재활용 센터',cat:'환경',c:0x48c9b0,k:'tank',e:-2,w:14,o:0},
+ {id:'desal',m:[{f:'machine_generatorLarge',t:1.6}],n:'담수화·취수장',cat:'환경',c:0x45b39d,k:'tank',e:-4,w:20,o:0},
+ {id:'park',m:[{f:'tree_oak',t:1,x:-.5,z:-.4},{f:'tree_default',t:.9,x:.5,z:.3},{f:'plant_bush',t:.5,x:-.4,z:.6},{f:'flower_redA',t:.25,x:.6,z:-.5},{f:'flower_yellowA',t:.25,x:.1,z:-.7}],n:'생태공원',cat:'환경',c:0x58d68d,k:'tree',e:0,w:-1,o:6},
+ {id:'o2',m:[{f:'hangar_roundA',t:1.7},{f:'machine_wireless',t:.6,x:.75,z:.7}],n:'산소 공급소',cat:'환경',c:0xa9dfbf,k:'dome',e:-3,w:-2,o:14},
+ {id:'shelter',m:[{f:'structure_closed',t:1.6}],n:'재난 대피소',cat:'안전',c:0xe74c3c,k:'box',e:-1,w:0,o:0},
+ {id:'radar',m:[{f:'structure',t:1.4},{f:'satelliteDish_large',t:1,y:1.4}],n:'재난 예측 센터',cat:'안전',c:0xf1948a,k:'tower',e:-3,w:0,o:0},
+ {id:'wall',m:[{f:'cliff_block_stone',t:1.9,sz:.35,sy:.7}],n:'방파제·방풍벽',cat:'안전',c:0x99a3a4,k:'wall',e:0,w:0,o:0},
+ {id:'board',n:'컨셉보드 안내판',cat:'안내',c:0xffffff,k:'board',e:0,w:0,o:0,hidden:true}
+];
+const PROBCAT={'기후위기':['환경','에너지'],'에너지 부족':['에너지'],'교통 혼잡':['이동'],'인구 변화':['생활'],'재난과 안전':['안전']};
+const SAMPLES=[
+ {nick:'사막여우',bg:'사막',name:'오아시스 7',prob:'에너지 부족',done:true},
+ {nick:'별빛정원',bg:'우주',name:'루나 가든',prob:'재난과 안전',done:true},
+ {nick:'초록발자국',bg:'초원',name:'그린웨이브',prob:'기후위기',done:true},
+ {nick:'구름산책',bg:'하늘',name:'스카이포트',prob:'교통 혼잡',done:false},
+ {nick:'파도타기',bg:'수중',name:'블루홈',prob:'인구 변화',done:false}
+];
+
+/* ---------- state ---------- */
+let S={code:'SKY24',num:7,nick:'바다설계자',name:'',slogan:'',bg:'수중',prob:'기후위기',vals:[],facs:[],solve:{e:'',m:'',l:''},photo:null,stickers:[],theme:'바다',objs:[],roads:[],notes:0,boardPlaced:false,submitted:false,pres:['','','','']};
+const KEY='future-city-draft';
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.objs)S=Object.assign(S,d)}catch(e){}}
+load();
+
+/* ---------- navigation ---------- */
+const screens=['enter','board','build','submit','teacher'];
+function go(n){screens.forEach(s=>$('#s-'+s).hidden=(s!==n));$$('#steps button').forEach(b=>b.classList.toggle('on',b.dataset.go===n));
+  if(n==='build'){try{initThree();onResize();applyBg();rebuildScene()}catch(err){console.error(err);toast('3D 화면을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.')}} if(n==='board')renderBoard(); if(n==='submit')renderSubmit(); if(n==='teacher')renderTeacher(); save()}
+$$('#steps button').forEach(b=>b.onclick=()=>go(b.dataset.go));
+$('#btn-enter').onclick=()=>{S.code=$('#code').value.trim().toUpperCase()||'SKY24';S.num=+$('#num').value||1;S.nick=$('#nick').value.trim()||'설계자';$('#who').textContent=`${S.code} · ${S.num}번 ${S.nick}`;go('board')};
+if(S.nick)$('#who').textContent=`${S.code} · ${S.num}번 ${S.nick}`;
+
+/* ---------- concept board form ---------- */
+function chips(el,list,get,set,multi,max){el.innerHTML='';list.forEach(v=>{const b=document.createElement('button');b.className='chip';b.textContent=v;b.classList.toggle('on',multi?get().includes(v):get()===v);
+ b.onclick=()=>{if(multi){const a=get();if(a.includes(v))set(a.filter(x=>x!==v));else if(a.length<max)set([...a,v]);else toast(`${max}개까지 골라요`)}else set(v);chips(el,list,get,set,multi,max);renderBoard();save()};el.appendChild(b)})}
+function formInit(){
+ chips($('#bgchips'),Object.keys(BGS).map(k=>k),()=>S.bg,v=>{S.bg=v});
+ $$('#bgchips button').forEach(b=>b.textContent=BGS[b.textContent].emoji+' '+b.textContent+' 도시');
+ $$('#bgchips button').forEach(b=>{const k=Object.keys(BGS).find(x=>b.textContent.includes(x));b.onclick=()=>{S.bg=k;$$('#bgchips button').forEach(x=>x.classList.toggle('on',x===b));renderBoard();save()};b.classList.toggle('on',k===S.bg)});
+ chips($('#probchips'),PROBS,()=>S.prob,v=>{S.prob=v});
+ chips($('#valchips'),VALS,()=>S.vals,v=>{S.vals=v},true,2);
+ chips($('#facchips'),LIB.filter(l=>!l.hidden).map(l=>l.n),()=>S.facs,v=>{S.facs=v},true,3);
+ chips($('#themechips'),Object.keys(THEMES),()=>S.theme,v=>{S.theme=v});
+ const st=$('#stickers');STICK.forEach(e=>{const b=document.createElement('button');b.className='chip';b.textContent=e;b.onclick=()=>{if(S.stickers.length>=6)return toast('스티커는 6개까지');S.stickers.push({e,x:20+Math.random()*60,y:30+Math.random()*50});renderBoard();save()};st.appendChild(b)});
+ $('#cname').value=S.name;$('#cslogan').value=S.slogan;$('#sv-e').value=S.solve.e;$('#sv-m').value=S.solve.m;$('#sv-l').value=S.solve.l;
+ $('#cname').oninput=e=>{S.name=e.target.value;renderBoard();save()};$('#cslogan').oninput=e=>{S.slogan=e.target.value;renderBoard();save()};
+ ['e','m','l'].forEach(k=>$('#sv-'+k).oninput=e=>{S.solve[k]=e.target.value;renderBoard();save()});
+ $('#photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();const url=URL.createObjectURL(f);img.onload=()=>{const c=document.createElement('canvas');const r=Math.min(1,480/img.width);c.width=img.width*r;c.height=img.height*r;c.getContext('2d').drawImage(img,0,0,c.width,c.height);S.photo=c.toDataURL('image/jpeg',.8);URL.revokeObjectURL(url);renderBoard();save()};img.src=url};
+}
+function renderBoard(){const b=$('#board');b.style.background=`linear-gradient(135deg,${THEMES[S.theme]},#fff)`;
+ b.innerHTML=`<div class="bname">${esc(S.name)||'도시 이름'}</div><div class="bslogan">${esc(S.slogan)||'한 줄 슬로건'} · ${BGS[S.bg].emoji} ${S.bg} 도시</div>
+ <div class="bvals">${(S.vals.length?S.vals:['핵심 가치']).map(v=>`<span>${v}</span>`).join('')}<span>🎯 ${S.prob}</span></div>
+ <div><div class="bfac">${[0,1,2].map(i=>`<div><b>${esc(S.facs[i]||'시설 '+(i+1))}</b></div>`).join('')}</div>
+ <div class="bsolve" style="margin-top:6px"><span>⚡ ${esc(S.solve.e)||'에너지'}</span><span>🚌 ${esc(S.solve.m)||'이동'}</span><span>🏠 ${esc(S.solve.l)||'생활'}</span></div></div>`;
+ if(S.photo){const im=document.createElement('img');im.className='bphoto';im.src=S.photo;im.alt='';b.appendChild(im)}
+ S.stickers.forEach((s,i)=>{const d=document.createElement('div');d.className='sticker';d.textContent=s.e;d.style.left=s.x+'%';d.style.top=s.y+'%';
+  d.onpointerdown=ev=>{d.setPointerCapture(ev.pointerId);const r=b.getBoundingClientRect();d.onpointermove=m=>{s.x=Math.max(0,Math.min(92,(m.clientX-r.left)/r.width*100));s.y=Math.max(0,Math.min(88,(m.clientY-r.top)/r.height*100));d.style.left=s.x+'%';d.style.top=s.y+'%'};d.onpointerup=()=>{d.onpointermove=null;save()}};
+  d.ondblclick=()=>{S.stickers.splice(i,1);renderBoard();save()};b.appendChild(d)});
+ if(boardTex)boardTex.needsUpdate=true;}
+function esc(s){return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}
+$('#btn-raise').onclick=()=>{if(!S.name)return toast('도시 이름을 먼저 적어요');S.boardPlaced=true;go('build');placeBoardObj();toast('컨셉보드가 도시 입구에 섰어요')};
+
+/* ---------- three.js ---------- */
+let renderer,scene,camera,ground,grid,objGroup,roadGroup,ring,boardTex,stars,started=false;
+const CELL=2,HALF=20; // 20x20 cells
+const cam={theta:0.8,phi:1.05,r:34,tx:0,tz:0};
+let mode='place',tool='move',placing=null,selected=null,walk=false,walkYaw=0,walkPitch=0,walkPos={x:0,z:14};
+const keys={};
+function initThree(){if(started)return;started=true;
+ const st=$('#stage');renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.shadowMap.enabled=true;st.insertBefore(renderer.domElement,st.firstChild);
+ scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(50,1,0.1,400);
+ const hemi=new THREE.HemisphereLight(0xffffff,0x445566,0.7);scene.add(hemi);
+ const sun=new THREE.DirectionalLight(0xffffff,0.9);sun.position.set(20,40,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-45,right:45,top:45,bottom:-45});scene.add(sun);scene.userData.sun=sun;scene.userData.hemi=hemi;
+ ground=new THREE.Mesh(new THREE.PlaneGeometry(HALF*CELL,HALF*CELL),new THREE.MeshStandardMaterial({color:0x888888,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+ grid=new THREE.GridHelper(HALF*CELL,HALF,0xffffff,0xffffff);grid.material.opacity=0.18;grid.material.transparent=true;grid.position.y=0.01;scene.add(grid);
+ objGroup=new THREE.Group();roadGroup=new THREE.Group();scene.add(objGroup,roadGroup);
+ ring=new THREE.Mesh(new THREE.RingGeometry(1.2,1.45,40),new THREE.MeshBasicMaterial({color:0xffd166,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=0.03;ring.visible=false;scene.add(ring);
+ const sg=new THREE.BufferGeometry();const pts=[];for(let i=0;i<600;i++){const r=180;pts.push((Math.random()-.5)*r*2,Math.random()*r,(Math.random()-.5)*r*2)}sg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.6}));scene.add(stars);
+ pointerInit();window.addEventListener('resize',onResize);loop();
+}
+function onResize(){if(!renderer)return;const st=$('#stage');const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+let decoGroup;
+function decorate(){if(!decoGroup){decoGroup=new THREE.Group();scene.add(decoGroup)}decoGroup.clear();if(!loader)return;const sets={초원:['tree_default','tree_oak','plant_bush','tree_default'],사막:['tree_palm','rock_largeA','tree_palm','cliff_block_stone'],우주:['rock_largeA','cliff_block_stone','rock_largeA'],수중:['rock_largeA','lily_large','plant_bush','rock_largeA'],하늘:[]}[S.bg]||[];
+ let seed=S.bg.length*31;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+ for(let i=0;i<22&&sets.length;i++){const a=rnd()*Math.PI*2,rad=HALF+2+rnd()*6,f=sets[Math.floor(rnd()*sets.length)];const g=new THREE.Group();g.position.set(Math.cos(a)*rad,0,Math.sin(a)*rad);g.rotation.y=rnd()*6.28;decoGroup.add(g);placePart(g,{f,t:1.2+rnd()*1.2}).catch(()=>{})}}
+function applyBg(){const b=BGS[S.bg];scene.background=new THREE.Color(b.sky);scene.fog=b.fog?new THREE.FogExp2(b.sky,b.fog):null;ground.material.color.setHex(b.ground);stars.visible=S.bg==='우주';scene.userData.sun.color.setHex(b.light);
+ ground.material.opacity=S.bg==='하늘'?0.9:1;ground.material.transparent=S.bg==='하늘';grid.material.color.setHex(S.bg==='사막'||S.bg==='하늘'?0x334455:0xffffff)}
+function loop(){requestAnimationFrame(loop);if($('#s-build').hidden)return;
+ if(walk){const sp=0.12,fw={x:-Math.sin(walkYaw),z:-Math.cos(walkYaw)};let dx=0,dz=0;if(keys.f){dx+=fw.x;dz+=fw.z}if(keys.b){dx-=fw.x;dz-=fw.z}if(keys.l){dx+=fw.z;dz-=fw.x}if(keys.r){dx-=fw.z;dz+=fw.x}
+  walkPos.x=Math.max(-HALF,Math.min(HALF,walkPos.x+dx*sp));walkPos.z=Math.max(-HALF,Math.min(HALF,walkPos.z+dz*sp));
+  camera.position.set(walkPos.x,1.6,walkPos.z);camera.lookAt(walkPos.x+fw.x*Math.cos(walkPitch),1.6+Math.sin(walkPitch),walkPos.z+fw.z*Math.cos(walkPitch))}
+ else{const x=cam.tx+cam.r*Math.sin(cam.phi)*Math.sin(cam.theta),y=cam.r*Math.cos(cam.phi),z=cam.tz+cam.r*Math.sin(cam.phi)*Math.cos(cam.theta);camera.position.set(x,y,z);camera.lookAt(cam.tx,0,cam.tz)}
+ objGroup.children.forEach(o=>{if(o.userData.spin)o.userData.spin.rotation.z+=0.03});
+ renderer.render(scene,camera)}
+
+/* building primitives */
+function mat(c){return new THREE.MeshStandardMaterial({color:c,roughness:.75})}
+const loader=(window.THREE&&THREE.GLTFLoader)?new THREE.GLTFLoader():null,cache={};
+let bundle=null;function getBundle(){if(!bundle)bundle=fetch('models.json').then(r=>r.json());return bundle}
+function b64buf(s){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer}
+function loadModel(f){if(!cache[f])cache[f]=new Promise((res,rej)=>{if(!loader)return rej('no loader');getBundle().then(B=>{if(!B[f])return rej('missing '+f);loader.parse(b64buf(B[f]),'',gl=>{const s=gl.scene;s.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});const box=new THREE.Box3().setFromObject(s);const size=new THREE.Vector3();box.getSize(size);const c=new THREE.Vector3();box.getCenter(c);s.userData.norm={w:Math.max(size.x,size.z)||1,cx:c.x,cz:c.z,y0:box.min.y};res(s)},rej)}).catch(rej)});return cache[f]}
+function placePart(g,part){return loadModel(part.f).then(src=>{const n=src.userData.norm,k=part.t/n.w;const inner=src.clone();inner.position.set(-n.cx*k,-n.y0*k,-n.cz*k);inner.scale.setScalar(k);const w=new THREE.Group();w.add(inner);w.scale.set(part.sx||1,part.sy||1,part.sz||1);w.position.set(part.x||0,part.y||0,part.z||0);w.rotation.y=part.ry||0;g.add(w);return w})}
+function attachModels(g,def){if(!def.m||!loader)return;const ph=g.userData.ph;Promise.all(def.m.map(p=>placePart(g,p))).then(()=>{if(ph){g.remove(ph)}}).catch(e=>{console.warn('model load failed',def.id,e);if(ph){ph.material.transparent=false;ph.material.opacity=1}})}
+function build(def){const g=new THREE.Group();if(def.m&&loader){const ph=new THREE.Mesh(new THREE.BoxGeometry(1.2,.6,1.2),new THREE.MeshStandardMaterial({color:def.c,transparent:true,opacity:.35}));ph.position.y=.3;g.add(ph);g.userData.ph=ph;attachModels(g,def);return g}const add=(geo,m,x,y,z)=>{const me=new THREE.Mesh(geo,m);me.position.set(x,y,z);me.castShadow=me.receiveShadow=true;g.add(me);return me};const c=mat(def.c),dark=mat(0x3a4a58),glass=new THREE.MeshStandardMaterial({color:0xbfe9ff,roughness:.2,metalness:.3});
+ switch(def.k){
+  case 'house':add(new THREE.BoxGeometry(1.5,1,1.5),c,0,.5,0);add(new THREE.ConeGeometry(1.25,.8,4),mat(0xc0392b),0,1.4,0).rotation.y=Math.PI/4;break;
+  case 'tower':add(new THREE.BoxGeometry(1.4,3.2,1.4),c,0,1.6,0);add(new THREE.BoxGeometry(1.5,.1,1.5),mat(0x2ecc71),0,3.25,0);for(let i=0;i<3;i++)add(new THREE.BoxGeometry(1.45,.25,1.45),glass,0,.7+i*.9,0);break;
+  case 'wide':add(new THREE.BoxGeometry(1.8,1.1,1.4),c,0,.55,0);add(new THREE.BoxGeometry(1.9,.15,1.5),dark,0,1.15,0);break;
+  case 'dome':add(new THREE.SphereGeometry(.9,24,16,0,Math.PI*2,0,Math.PI/2),glass,0,.1,0);add(new THREE.CylinderGeometry(.95,.95,.2,24),c,0,.1,0);break;
+  case 'flat':add(new THREE.BoxGeometry(1.8,.08,1.8),mat(0x1b4f72),0,.5,0).rotation.x=-.35;add(new THREE.CylinderGeometry(.08,.08,.5),dark,0,.25,0);break;
+  case 'wind':add(new THREE.CylinderGeometry(.08,.14,2.6),c,0,1.3,0);{const hub=new THREE.Group();hub.position.set(0,2.6,.12);for(let i=0;i<3;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.1,1.2,.04),c);bl.position.y=.6;const p=new THREE.Group();p.add(bl);p.rotation.z=i*Math.PI*2/3;hub.add(p)}g.add(hub);g.userData.spin=hub}break;
+  case 'box':add(new THREE.BoxGeometry(1.4,.9,1.2),c,0,.45,0);add(new THREE.BoxGeometry(1.1,.1,.9),dark,0,.95,0);break;
+  case 'stop':add(new THREE.BoxGeometry(1.6,.08,.8),c,0,1,0);add(new THREE.CylinderGeometry(.05,.05,1),dark,-.7,.5,0);add(new THREE.CylinderGeometry(.05,.05,1),dark,.7,.5,0);add(new THREE.BoxGeometry(1.2,.4,.5),glass,0,.3,0);break;
+  case 'pad':add(new THREE.CylinderGeometry(.9,.9,.15,24),c,0,.08,0);add(new THREE.TorusGeometry(.6,.05,8,24),mat(0xffffff),0,.17,0).rotation.x=Math.PI/2;break;
+  case 'tube':add(new THREE.CylinderGeometry(.5,.5,1.8,16),glass,0,.9,0).rotation.z=Math.PI/2;add(new THREE.BoxGeometry(1,.6,1),c,0,.3,0);break;
+  case 'tank':add(new THREE.CylinderGeometry(.7,.7,1.3,20),c,0,.65,0);add(new THREE.CylinderGeometry(.3,.3,1.8,12),dark,.9,.9,0);break;
+  case 'tree':for(let i=0;i<3;i++){const x=(i-1)*.6,z=(i%2)*.5-.2;add(new THREE.CylinderGeometry(.06,.08,.6),mat(0x7b4f2a),x,.3,z);add(new THREE.SphereGeometry(.4,12,10),c,x,.8,z)}break;
+  case 'wall':add(new THREE.BoxGeometry(1.9,1,.4),c,0,.5,0);add(new THREE.BoxGeometry(1.9,.2,.6),dark,0,1.05,0);break;
+  case 'board':{const post=add(new THREE.BoxGeometry(.1,1.4,.1),dark,0,.7,0);const cv=document.createElement('canvas');cv.width=512;cv.height=384;boardTex=new THREE.CanvasTexture(cv);boardTex.userData={cv};drawBoardTex();const pl=add(new THREE.BoxGeometry(2.4,1.8,.08),new THREE.MeshBasicMaterial({map:boardTex}),0,2.2,0);pl.material.side=THREE.DoubleSide;break}
+ }return g}
+function drawBoardTex(){if(!boardTex)return;const cv=boardTex.userData.cv,x=cv.getContext('2d');x.fillStyle=THEMES[S.theme];x.fillRect(0,0,512,384);x.fillStyle='#132';x.font='bold 46px Jua, sans-serif';x.fillText(S.name||'도시 이름',24,70);x.font='22px "Noto Sans KR", sans-serif';x.fillText((S.slogan||'')+' · '+S.bg+' 도시',24,110);
+ x.font='20px "Noto Sans KR", sans-serif';x.fillText('🎯 '+S.prob+'  ·  '+S.vals.join(' · '),24,150);[0,1,2].forEach(i=>{x.fillStyle='rgba(255,255,255,.8)';x.fillRect(24+i*156,190,144,70);x.fillStyle='#132';x.font='bold 18px "Noto Sans KR", sans-serif';x.fillText((S.facs[i]||'시설 '+(i+1)).slice(0,9),34,230)});
+ x.font='18px "Noto Sans KR", sans-serif';x.fillText('⚡'+(S.solve.e||'-')+'  🚌'+(S.solve.m||'-')+'  🏠'+(S.solve.l||'-'),24,300);S.stickers.forEach(s=>{x.font='34px serif';x.fillText(s.e,s.x/100*512,s.y/100*384+30)});
+ if(S.photo){const im=new Image();im.onload=()=>{x.drawImage(im,360,16,136,102);boardTex.needsUpdate=true};im.src=S.photo}boardTex.needsUpdate=true}
+
+function addObj(o,silent){const def=LIB.find(l=>l.id===o.t);const g=build(def);g.position.set(o.x,0,o.z);g.rotation.y=o.r||0;g.scale.setScalar(o.s||1);g.userData=Object.assign(g.userData,{def,o});if(o.note)setLabel(g,o.note);objGroup.add(g);if(!silent){S.objs.push(o);history.push({type:'add',o});sim();save()}return g}
+function setLabel(g,text){if(g.userData.label){g.remove(g.userData.label)}if(!text)return;const cv=document.createElement('canvas');cv.width=512;cv.height=128;const x=cv.getContext('2d');x.fillStyle='rgba(255,255,255,.92)';roundRect(x,4,4,504,120,24);x.fill();x.fillStyle='#17222e';x.font='34px "Noto Sans KR", sans-serif';x.textAlign='center';x.fillText(text.slice(0,16),256,56);if(text.length>16)x.fillText(text.slice(16,32),256,100);
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),depthTest:false}));sp.scale.set(3,.75,1);sp.position.y=3.6;g.add(sp);g.userData.label=sp}
+function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
+function rebuildScene(){objGroup.clear();roadGroup.clear();boardTex=null;S.objs.forEach(o=>addObj(o,true));rebuildRoads();decorate();sim();renderLib();renderCheck()}
+const ROT={straight:0,end:0,bend:0,tee:0,cross:0}; // 모델 방향 보정값 (화면 확인 후 조정)
+function roadTile(k){const [cx,cz]=k.split(',').map(Number);const has=(a,b)=>S.roads.includes(a+','+b);const N=has(cx,cz-1),E=has(cx+1,cz),Sd=has(cx,cz+1),W=has(cx-1,cz);const n=N+E+Sd+W;let f='road-square',r=0;
+ if(n===1){f='road-end';r=N?0:E?-Math.PI/2:Sd?Math.PI:Math.PI/2;r+=ROT.end}
+ else if(n===2&&N&&Sd){f='road-straight';r=ROT.straight}else if(n===2&&E&&W){f='road-straight';r=Math.PI/2+ROT.straight}
+ else if(n===2){f='road-bend';r=(N&&E)?0:(E&&Sd)?-Math.PI/2:(Sd&&W)?Math.PI:Math.PI/2;r+=ROT.bend}
+ else if(n===3){f='road-intersection';r=!N?0:!E?-Math.PI/2:!Sd?Math.PI:Math.PI/2;r+=ROT.tee}
+ else if(n===4){f='road-crossroad';r=ROT.cross}
+ const g=new THREE.Group();g.position.set(cx*CELL+CELL/2,0.01,cz*CELL+CELL/2);g.rotation.y=r;g.userData.k=k;roadGroup.add(g);
+ const fallback=new THREE.Mesh(new THREE.PlaneGeometry(CELL*.96,CELL*.96),new THREE.MeshStandardMaterial({color:0x4a5560,roughness:.9}));fallback.rotation.x=-Math.PI/2;fallback.position.y=.01;g.add(fallback);
+ if(loader)placePart(g,{f,t:CELL}).then(()=>g.remove(fallback)).catch(()=>{})}
+function rebuildRoads(){roadGroup.clear();S.roads.forEach(k=>roadTile(k))}
+function placeBoardObj(){if(!S.objs.some(o=>o.t==='board'))addObj({t:'board',x:1,z:15,r:Math.PI,s:1,id:Date.now()});else{drawBoardTex()}}
+const history=[];
+function undo(){const h=history.pop();if(!h)return toast('되돌릴 것이 없어요');if(h.type==='add'){S.objs=S.objs.filter(o=>o!==h.o);const g=objGroup.children.find(c=>c.userData.o===h.o);if(g)objGroup.remove(g)}if(h.type==='del'){addObj(h.o,true);S.objs.push(h.o)}if(h.type==='road'){toggleRoad(h.k,true)}select(null);sim();save()}
+function toggleRoad(k,silent){const i=S.roads.indexOf(k);if(i>=0)S.roads.splice(i,1);else S.roads.push(k);rebuildRoads();if(!silent){history.push({type:'road',k});save()}}
+function snap(v){return Math.floor(v/CELL)*CELL+CELL/2}
+function select(g){selected=g;$('#seltools').hidden=!g;ring.visible=!!g;if(g){ring.position.set(g.position.x,0.03,g.position.z);ring.scale.setScalar(g.scale.x);$('#selname').textContent=g.userData.def.n}}
+
+/* pointer */
+function pointerInit(){const el=renderer.domElement,ray=new THREE.Raycaster(),v=new THREE.Vector2(),pts=new Map();let down=null,moved=false,dragObj=null,pinch0=0,pan0=null;
+ const hit=(px,py,list)=>{const r=el.getBoundingClientRect();v.set((px-r.left)/r.width*2-1,-((py-r.top)/r.height)*2+1);ray.setFromCamera(v,camera);return ray.intersectObjects(list,true)};
+ el.onpointerdown=e=>{el.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;if(pts.size===1){down={x:e.clientX,y:e.clientY,th:cam.theta,ph:cam.phi,yaw:walkYaw,pit:walkPitch};dragObj=null;
+   if(!walk&&selected&&tool==='move'){const h=hit(e.clientX,e.clientY,[selected]);if(h.length)dragObj=selected}}
+  if(pts.size===2){const a=[...pts.values()];pinch0=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);pan0={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2,tx:cam.tx,tz:cam.tz,r:cam.r}}};
+ el.onpointermove=e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===2&&pan0){const a=[...pts.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);cam.r=Math.max(8,Math.min(80,pan0.r*pinch0/d));const mx=(a[0].x+a[1].x)/2-pan0.x,my=(a[0].y+a[1].y)/2-pan0.y;const k=cam.r/600;cam.tx=pan0.tx-(mx*Math.cos(cam.theta)+my*Math.sin(cam.theta))*k*-1*-1;cam.tz=pan0.tz-(-mx*Math.sin(cam.theta)+my*Math.cos(cam.theta))*k*-1*-1;moved=true;return}
+  if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;
+  if(dragObj){const h=hit(e.clientX,e.clientY,[ground]);if(h.length){const p=h[0].point;dragObj.position.set(snap(p.x),0,snap(p.z));dragObj.userData.o.x=dragObj.position.x;dragObj.userData.o.z=dragObj.position.z;ring.position.set(dragObj.position.x,.03,dragObj.position.z)}return}
+  if(walk){walkYaw=down.yaw-dx*0.005;walkPitch=Math.max(-1,Math.min(1,down.pit-dy*0.004))}else{cam.theta=down.th-dx*0.006;cam.phi=Math.max(0.25,Math.min(1.45,down.ph-dy*0.005))}};
+ el.onpointerup=el.onpointercancel=e=>{pts.delete(e.pointerId);if(pts.size<2)pan0=null;if(dragObj){save();sim();dragObj=null;down=null;return}if(!down)return;const wasTap=!moved;down=null;if(!wasTap||walk)return;
+  if(mode==='road'){const h=hit(e.clientX,e.clientY,[ground]);if(h.length){const p=h[0].point;toggleRoad(Math.floor(p.x/CELL)+','+Math.floor(p.z/CELL))}return}
+  const ho=hit(e.clientX,e.clientY,objGroup.children);if(ho.length){let g=ho[0].object;while(g.parent&&g.parent!==objGroup)g=g.parent;select(g);return}
+  if(placing){const h=hit(e.clientX,e.clientY,[ground]);if(h.length){const p=h[0].point;const x=snap(p.x),z=snap(p.z);if(S.objs.some(o=>o.x===x&&o.z===z))return toast('이 칸에는 이미 시설이 있어요');const g=addObj({t:placing,x,z,r:0,s:1,id:Date.now()});select(g);renderCheck();toast(LIB.find(l=>l.id===placing).n+' 배치!')}return}
+  select(null)};
+ el.onwheel=e=>{e.preventDefault();cam.r=Math.max(8,Math.min(80,cam.r+e.deltaY*0.03))};
+}
+$('#seltools').onclick=e=>{const b=e.target.closest('button');if(!b||!selected)return;const t=b.dataset.t,o=selected.userData.o;
+ if(t==='move'){tool='move';$$('#seltools button').forEach(x=>x.classList.toggle('on',x===b));toast('시설을 끌어서 옮겨요')}
+ if(t==='rot'){o.r=(o.r||0)+Math.PI/4;selected.rotation.y=o.r}
+ if(t==='up'){o.s=Math.min(2,(o.s||1)+.2);selected.scale.setScalar(o.s);ring.scale.setScalar(o.s)}
+ if(t==='down'){o.s=Math.max(.5,(o.s||1)-.2);selected.scale.setScalar(o.s);ring.scale.setScalar(o.s)}
+ if(t==='note'){askNote(selected)}
+ if(t==='copy'){const n=Object.assign({},o,{x:o.x+CELL,id:Date.now()});if(S.objs.some(q=>q.x===n.x&&q.z===n.z))n.z+=CELL;select(addObj(n))}
+ if(t==='del'){if(o.t==='board')S.boardPlaced=false;S.objs=S.objs.filter(q=>q!==o);objGroup.remove(selected);history.push({type:'del',o});select(null)}
+ sim();renderCheck();save()};
+function askNote(g){const bar=$('#seltools');let box=bar.querySelector('.notein');if(box){box.remove();return}box=document.createElement('div');box.className='notein row';box.style.width='100%';box.innerHTML=`<input id="noteinput" placeholder="이 시설은 어떤 문제를 해결하나요?" maxlength="32" style="flex:1;min-width:180px"><button class="primary" id="notesave">붙이기</button>`;bar.appendChild(box);const inp=box.querySelector('input');inp.value=g.userData.o.note||'';inp.focus();box.querySelector('#notesave').onclick=()=>{g.userData.o.note=inp.value.trim();setLabel(g,g.userData.o.note);box.remove();sim();renderCheck();save();toast('설명 글을 붙였어요')}}
+
+/* modes */
+function setMode(m){mode=m;walk=(m==='walk');$('#walkpad').hidden=!walk;['place','road','walk'].forEach(k=>$('#m-'+k).classList.toggle('on',k===m));select(null);if(walk){toast('끌어서 둘러보고 화살표로 걸어요')}}
+$('#m-place').onclick=()=>setMode('place');$('#m-road').onclick=()=>setMode('road');$('#m-walk').onclick=()=>setMode(walk?'place':'walk');
+$('#m-home').onclick=()=>{Object.assign(cam,{theta:.8,phi:1.05,r:34,tx:0,tz:0});walkPos={x:0,z:14};walkYaw=0;walkPitch=0};
+$('#m-undo').onclick=undo;$('#m-adv').onclick=()=>toast('심화 실험(시간·낮밤·모래바람)은 선생님이 열어 주는 기능이에요. 시안에는 아직 없어요.');
+$$('#walkpad button').forEach(b=>{const k=b.dataset.w;b.onpointerdown=e=>{keys[k]=true;b.setPointerCapture(e.pointerId)};b.onpointerup=b.onpointercancel=()=>{keys[k]=false}});
+window.addEventListener('keydown',e=>{const m={ArrowUp:'f',w:'f',ArrowDown:'b',s:'b',ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r'}[e.key];if(m)keys[m]=true});window.addEventListener('keyup',e=>{const m={ArrowUp:'f',w:'f',ArrowDown:'b',s:'b',ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r'}[e.key];if(m)keys[m]=false});
+
+/* library panel */
+function renderLib(){const el=$('#tab-lib');el.innerHTML='';const cats=['생활','에너지','이동','환경','안전'];
+ const pre=S.facs.length?`<div class="hint">컨셉보드에서 고른 시설: ${S.facs.join(', ')}</div>`:'';el.insertAdjacentHTML('beforeend',pre+`<div class="muted">시설을 고른 뒤 바닥을 누르면 그 칸에 놓여요.</div>`);
+ cats.forEach(c=>{el.insertAdjacentHTML('beforeend',`<div class="cat">${c}</div>`);const g=document.createElement('div');g.className='lib';LIB.filter(l=>l.cat===c).forEach(l=>{const b=document.createElement('button');b.innerHTML=`<span class="sw" style="background:#${l.c.toString(16).padStart(6,'0')}"></span><span>${l.n}</span>`;if(S.facs.includes(l.n))b.style.borderColor='var(--accent)';b.classList.toggle('on',placing===l.id);b.onclick=()=>{placing=placing===l.id?null:l.id;setMode('place');renderLib();if(placing)toast(l.n+': 바닥을 눌러 놓아요')};g.appendChild(b)});el.appendChild(g)});
+ if(!S.objs.some(o=>o.t==='board')){const b=document.createElement('button');b.textContent='📋 컨셉보드 안내판 세우기';b.onclick=()=>{S.boardPlaced=true;placeBoardObj();renderLib();renderCheck()};el.appendChild(b)}}
+$$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));['lib','check','guide'].forEach(t=>$('#tab-'+t).hidden=(t!==b.dataset.tab));if(b.dataset.tab==='check')renderCheck()});
+
+/* simulation (light) */
+let R={e:0,w:0,o:0,p:0};
+function sim(){R={e:0,w:0,o:0,p:0};S.objs.forEach(o=>{const d=LIB.find(l=>l.id===o.t);const k=o.s||1;R.e+=d.e*k;R.w+=d.w*k;R.o+=d.o*k;R.p+=(d.p||0)*Math.round(k)});
+ if(S.bg==='수중'||S.bg==='우주')R.o-=R.p; // 밀폐 환경은 산소를 더 씀
+ if(S.bg==='사막')R.w-=Math.round(R.p/2);
+ ['e','w','o'].forEach(k=>{const v=Math.round(R[k]);$('#g-'+k).textContent=(v>0?'+':'')+v;const bar=$('#gb-'+k);bar.style.width=Math.min(100,50+v*2)+'%';bar.style.background=v<0?'var(--bad)':v<6?'var(--warn)':'var(--good)'});
+ let msg;if(R.p===0)msg='아직 아무도 살지 않아요. 집부터 지어 볼까요?';else if(R.e<0)msg=`주민 ${R.p}명: 전기가 모자라요. 태양광이나 풍력을 더 놓아 주세요.`;else if(R.w<0)msg=`주민 ${R.p}명: 물이 부족해요. ${S.bg==='사막'?'사막은 물을 더 써요. ':''}물 재활용이나 취수장이 필요해요.`;else if(R.o<0)msg=`주민 ${R.p}명: 숨 쉴 공기가 모자라요. ${S.bg==='수중'||S.bg==='우주'?'밀폐 도시라 산소 공급소가 꼭 필요해요.':'생태공원을 늘려 보세요.'}`;else msg=`주민 ${R.p}명: 오늘 하루가 든든해요! 이제 길과 설명 글로 도시를 완성해요.`;$('#say').textContent='주민: '+msg;
+ $('#stats').textContent=`시설 ${S.objs.filter(o=>o.t!=='board').length}개 · 길 ${S.roads.length}칸 · 설명 글 ${S.objs.filter(o=>o.note).length}개 · 주민 ${R.p}명`}
+function checks(){const facs=S.objs.filter(o=>o.t!=='board');const cats=PROBCAT[S.prob];const has=facs.some(o=>cats.includes(LIB.find(l=>l.id===o.t).cat));const notes=facs.some(o=>o.note);const gaugeOk={'에너지 부족':R.e>=0,'기후위기':R.o>=0&&R.e>=0,'인구 변화':R.p>0&&R.w>=0,'교통 혼잡':true,'재난과 안전':true}[S.prob];
+ return [{t:`도시 배경이 보인다 (${S.bg})`,ok:true},{t:'주요 시설이 3가지 이상 있다',ok:facs.length>=3},{t:`문제 해결 요소가 들어 있다 (${S.prob})`,ok:has&&notes&&gaugeOk,why:!has?`${cats.join('·')} 시설을 놓아요`:!notes?'시설에 💬 설명 글을 붙여요':!gaugeOk?'게이지가 빨간색이면 해결이 안 된 거예요':''},{t:'컨셉보드가 들어 있다',ok:S.objs.some(o=>o.t==='board')}]}
+function renderCheck(){const c=checks();const html=c.map(x=>`<div class="${x.ok?'ok':''}"><span class="dot">${x.ok?'✓':''}</span><span>${x.t}${x.why&&!x.ok?` <span class="muted">· ${x.why}</span>`:''}</span></div>`).join('');$('#checklist').innerHTML=html;$('#checklist2').innerHTML=html;
+ $('#probhint').textContent=`내가 고른 문제는 「${S.prob}」. ${PROBCAT[S.prob].join('·')} 시설과 그 설명 글이 있어야 체크돼요.`}
+$('#btn-tosubmit').onclick=()=>go('submit');
+
+/* submit */
+function renderSubmit(){sim();renderCheck();const c=checks(),miss=c.filter(x=>!x.ok).length;$('#submitnote').textContent=miss?`${miss}개가 아직 비어 있어요. 그래도 제출할 수 있지만 돌아가서 채우면 더 좋아요.`:'모든 항목이 준비됐어요!';
+ ['p1','p2','p3','p4'].forEach((k,i)=>{const el=$('#'+k);el.value=S.pres[i]||(i===0?`${S.bg}에 만든 ${S.name||''}`:i===1?S.prob:i===2?(S.facs[0]||''):'');el.oninput=()=>{S.pres[i]=el.value;save()}});
+ $('#submitted').textContent=S.submitted?'제출 완료 · 다시 제출하면 최신본으로 바뀌어요':'';$('#classgal').hidden=!S.submitted;if(S.submitted)renderGal($('#gal'))}
+$('#btn-submit').onclick=()=>{S.submitted=true;save();toast('제출했어요! 선생님 화면에 올라갔어요');renderSubmit()};
+$('#btn-back').onclick=()=>go('build');
+function card(s,mine){const b=BGS[s.bg];return `<div class="gcard"><div class="thumb" style="background:linear-gradient(160deg,#${b.sky.toString(16).padStart(6,'0')},#${b.ground.toString(16).padStart(6,'0')})">${b.emoji} ${esc(s.name)||'이름 없는 도시'}</div><div class="meta"><b>${esc(s.nick)}${mine?' (나)':''}</b>${s.bg} 도시 · 🎯 ${s.prob}</div></div>`}
+function renderGal(el){const mine={nick:S.nick,bg:S.bg,name:S.name,prob:S.prob};el.innerHTML=(S.submitted?card(mine,true):'')+SAMPLES.filter(s=>s.done).map(s=>card(s)).join('')}
+
+/* teacher */
+function renderTeacher(){const q=$('#qr'),x=q.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,21,21);x.fillStyle='#000';let seed=7;for(let i=0;i<21;i++)for(let j=0;j<21;j++){seed=(seed*9301+49297)%233280;if((seed/233280)<.45)x.fillRect(i,j,1,1)}
+ [[0,0],[14,0],[0,14]].forEach(([a,b])=>{x.fillStyle='#000';x.fillRect(a,b,7,7);x.fillStyle='#fff';x.fillRect(a+1,b+1,5,5);x.fillStyle='#000';x.fillRect(a+2,b+2,3,3)});
+ const me={nick:S.nick||'(나)',bg:S.bg,name:S.name,prob:S.prob,step:S.submitted?'제출':S.objs.length?'도시':'컨셉보드',n:checks().filter(c=>c.ok).length,when:'방금'};
+ const rows=[me,...SAMPLES.map((s,i)=>({...s,step:s.done?'제출':i%2?'도시':'컨셉보드',n:s.done?4:1+i%3,when:(1+i)+'분 전'}))];
+ $('#status').innerHTML=rows.map(r=>`<div class="scard"><b>${esc(r.nick)}</b><span class="pill">${r.step}</span> <span class="muted">${BGS[r.bg].emoji} ${esc(r.name)||'—'}</span><div class="bar"><span style="width:${r.n/4*100}%"></span></div><div class="muted">체크 ${r.n}/4 · 저장 ${r.when}</div></div>`).join('');
+ renderGal($('#tgal'))}
+$('#btn-pub').onclick=()=>toast('학생 화면에 갤러리가 열렸어요 (시안)');
+
+/* boot */
+formInit();renderBoard();
+if(S.nick&&(S.name||S.objs.length)){go(S.objs.length?'build':'board')}else go('enter');
+})();
+</script>
+
+</body></html>
